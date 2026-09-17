@@ -1,0 +1,12 @@
+{
+  "name": "csv_app",
+  "version": "1.0.0",
+  "description": "An app to write contact information to a csv file.",
+  "license": "ISC",
+  "author": "Shin Endo",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
