@@ -1,8 +1,10 @@
+import Book from "../models/book.js";
+
 async function booksRouter(fastify, _opts){
   fastify.post("/", async (request, reply) => {
     const { title, author } = request.body;
     try {
-      const book = { title, author };
+      const book = await Book.create({ title, author });
       reply.send(book);
     } catch(e) {
       console.error("Error occured:", e.message);
@@ -12,7 +14,7 @@ async function booksRouter(fastify, _opts){
   fastify.get("/:id", async (request, reply) => {
     const { id } = request.params;
     try {
-      const book = { id };
+      const book = await Book.findByPk(id);
       reply.send(book);
     } catch(e) {
       console.error("Error occured;", e.message);
@@ -21,8 +23,11 @@ async function booksRouter(fastify, _opts){
   });
   fastify.put("/:id", async (request, reply) => {
     const { id } = request.params;
+    const { title, author } = request.body;
     try {
-      const book = { id };
+      const book = await Book.update({ title, author }, {
+        where: { id },
+      });
       reply.send(book);
     } catch(e) {
       console.error("Error occured;", e.message);
@@ -32,7 +37,9 @@ async function booksRouter(fastify, _opts){
   fastify.delete("/:id", async (request, reply) => {
     const { id } = request.params;
     try {
-      const book = { id };
+      const book = await Book.destroy({
+        where: { id }
+      });
       reply.send(book);
     } catch(e) {
       console.error("Error occured;", e.message);
