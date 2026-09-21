@@ -1,39 +1,25 @@
-import dotenv from "dotenv";
-import { createTransport } from "nodemailer";
-dotenv.config();
+import Fastify from "fastify";
+import formBody from "@fastify/formbody";
+import { welcomeMail } from "./mailTemplates.js";
+import { sendMail } from "./services/mailer.js";
 
-const transporter = createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  }
+const app = Fastify();
+await app.register(formBody);
+
+const port = process.env.PORT || 3000;
+
+app.post("/subscribe", async (request, reply) => {
+  const { email = process.env.GMAIL_TO } = request.body;
+  console.log(`Received ${email}`);
+
+  await sendMail(email, welcomeMail());
+  reply.send({ message: "okay" });
 });
 
-const html = 
-`
-<html>
-<body>
-<h1>Confrim your email</h1>
-</body>
-</html>
-`
-
-
-const mailOptions = {
-  from: process.env.GMAIL_USER,
-  to: process.env.GMAIL_TO,
-  subject: "Welcome to Inn Box!",
-  html
-};
-
-const sendMail = async () => {
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`Email sent: ${info.response}`);
-  } catch(e) {
-    console.error(`An error occurred: ${e.message}`);
-  }
+try {
+  await app.listen({ port, host: "0.0.0.0" });
+  console.log(`Server running at http://localhost:${port}`);
+} catch(err) {
+  console.error(`Error starting server:`, err);
+  process.exit(1);
 }
-
-sendMail();
