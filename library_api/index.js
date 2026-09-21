@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import formbody from '@fastify/formbody';
+import routes from './routes/index.js';
 const app = Fastify();
 const PORT = 3000;
 await app.register(formbody);
@@ -8,6 +9,8 @@ await app.register(formbody);
 app.get("/", async (_request, reply) => {
   reply.send({message: "ok"});
 });
+
+app.register(routes, { prefix: "/api" });
 
 app.setNotFoundHandler((request, reply) => {
   const { message, statusCode } = request.error || {};
