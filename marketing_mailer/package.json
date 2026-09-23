@@ -13,6 +13,8 @@
     "@fastify/formbody": "^8.0.2",
     "dotenv": "^18.0.1",
     "fastify": "^5.12.5",
-    "nodemailer": "^8.0.11"
+    "nodemailer": "^8.0.11",
+    "sequelize": "^6.37.8",
+    "sqlite3": "^5.1.7"
   }
 }
