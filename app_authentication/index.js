@@ -38,6 +38,7 @@ fastifyPassport.registerUserDeserializer(async (user,request) => {
   return account;
 })
 fastifyPassport.use("local", Account.genStrategy());
+fastifyPassport.use("jwt", Account.genJWTStrategy());
 
 const loginFormVars = {
   signup: {
@@ -61,8 +62,6 @@ app.get("/", async (request,reply) => {
   const formVars = loginFormVars[page] || loginFormVars.signup;
   return reply.view("index", formVars);
 });
-
-const users = {};
 
 app.post("/account", async (request,reply) => {
   const { username, password } = request.body;
@@ -96,6 +95,24 @@ app.post("/auth", async (request, reply) => {
     } 
   )(request, reply);
 });
+
+app.post(
+  "/api/auth",
+  { preValidation: fastifyPassport.authenticate("local", { session: false })},
+  async (request, reply) => {
+    const { user: account } = request;
+    const token = account.signJWT();
+    return reply.send({ token });
+  },
+);
+
+app.get(
+  "/api/test",
+  { preValidation: fastifyPassport.authenticate("jwt", { session: false })},
+  async (request, reply) => {
+    return reply.send({ status: "Authenticated" });
+  }
+);
 
 try {
   await app.listen({ port: PORT, host: "0.0.0.0" });
