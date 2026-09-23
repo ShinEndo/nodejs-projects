@@ -1,11 +1,33 @@
 import Fastify from "fastify";
 import formbody from "@fastify/formbody";
+import amqp from "amqplib";
 import { createClient } from "redis";
 
 const app = Fastify();
-const PORT = 3000;
-
 await app.register(formbody);
+const PORT = process.env.PORT || 3000;
+let channel, connection;
+
+async function connect() {
+  try {
+    const rabbitHost = process.env.RABBITMQ_HOST || "localhost";
+    connection = await amqp.connect(`amqp://${rabbitHost}:5672`);
+    channel = await connection.createChannel();
+    await channel.assertQueue("drink-order");
+  } catch(err) {
+    console.log(err);
+  }
+}
+
+await connect();
+
+async function sendOrderData(data) {
+  await channel.sendToQueue(
+    "drink-order",
+    Buffer.from(JSON.stringify(data)),
+    { persistent: true },
+  );
+}
 
 const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 
@@ -30,15 +52,11 @@ app.post("/slow-order", async (request, reply) => {
 const coffeeQueue = [];
 
 app.post("/order", async (requset, reply) => {
-  const { drinkOrder } = requset.body;
-  await publisher.publish("drink-order", JSON.stringify({
-    drink: drinkOrder,
-    cost: 450,
-    customer: "ShinEndo",
-  }));
-  coffeeQueue.push(drinkOrder);
-  console.log(coffeeQueue.length);
-  reply.send("Drink order added to queue");
+  const { drinkOrder: order, cost, customer } = requset.body;
+  const data = { order, customer };
+  await sendOrderData(data);
+  console.log(`Drink: ${order} is being processed for ${customer}.`);
+  reply.send("Order Processing.");
 });
 
 app.get("/process-order", async (request, reply) => {
