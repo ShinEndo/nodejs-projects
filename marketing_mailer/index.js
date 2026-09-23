@@ -1,10 +1,9 @@
-import dotenv from "dotenv";
 import Fastify from "fastify";
 import formBody from "@fastify/formbody";
-import { welcomeMail, confirmationMail, campaignMail } from "./mailTemplates.js";
+import { welcomeMail, confirmationMail } from "./mailTemplates.js";
 import { sendMail } from "./services/mailer.js";
+import { schedule } from "./services/scheduler.js";
 import Lead from "./db.js";
-dotenv.config();
 
 const app = Fastify();
 await app.register(formBody);
@@ -55,11 +54,11 @@ app.get("/campaign/:campainKey/user/:email/image.png", async (request,reply) => 
   reply.send({ message: "okay" });
 } );
 
-sendMail(process.env.GMAIL_USER,campaignMail("Special Promotion", "promo1", process.env.GMAIL_TO));
-
 app.ready(() => {
   console.log(app.printRoutes());
 });
+
+schedule({ second: 30 });
 
 try {
   await app.listen({ port, host: "0.0.0.0" });
