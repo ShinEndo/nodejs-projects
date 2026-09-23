@@ -14,8 +14,43 @@ await app.register(fastyfyView, {
   root: "views",
 });
 
+const loginFormVars = {
+  signup: {
+    title: "Sign up",
+    message: "Already have an account?",
+    route: "/account",
+    switchPage: "login",
+    showExtraFeilds: true,
+  },
+  login: {
+    title: "Log in",
+    message: "Need to create an account",
+    route: "/auth",
+    switchPage: "signup",
+    showExtraFeilds: false,
+  }
+}
+
 app.get("/", async (request,reply) => {
-  reply.send("Welcome!");
+  const { page } = request.query;
+  const formVars = loginFormVars[page] || loginFormVars.signup;
+  return reply.view("index", formVars);
+});
+
+const users = {};
+
+app.post("/account", async (request,reply) => {
+  const { username, password } = request.body;
+  users[username] = password;
+  return reply.send({ message: "Account created" });
+});
+
+app.post("/auth", async (request, reply) => {
+  const { username, password } = request.body;
+  if(users[username] && users[username] === password) {
+    return reply.send({ message: "Logged in" });
+  }
+  return reply.redirect("/?page=login");
 });
 
 try {
